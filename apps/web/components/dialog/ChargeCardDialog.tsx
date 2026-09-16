@@ -1,13 +1,13 @@
-import type { Dispatch, SetStateAction } from "react";
-import { useState } from "react";
-
 import { Dialog } from "@calcom/features/components/controlled-dialog";
+import { convertFromSmallestToPresentableCurrencyUnit } from "@calcom/lib/currencyConversions";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
 import { Button } from "@calcom/ui/components/button";
-import { DialogContent, DialogFooter, DialogHeader, DialogClose } from "@calcom/ui/components/dialog";
+import { DialogClose, DialogContent, DialogFooter, DialogHeader } from "@calcom/ui/components/dialog";
 import { showToast } from "@calcom/ui/components/toast";
 import { CreditCardIcon, TriangleAlertIcon } from "@coss/ui/icons";
+import type { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 
 interface IRescheduleDialog {
   isOpenDialog: boolean;
@@ -34,7 +34,7 @@ export const ChargeCardDialog = (props: IRescheduleDialog) => {
   };
 
   const currencyStringParams = {
-    amount: props.paymentAmount / 100.0,
+    amount: convertFromSmallestToPresentableCurrencyUnit(props.paymentAmount, props.paymentCurrency),
     formatParams: { amount: { currency: props.paymentCurrency } },
   };
 
