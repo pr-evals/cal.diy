@@ -1,8 +1,6 @@
-import { render, screen, cleanup } from "@testing-library/react";
-import { describe, expect, it, vi, beforeAll, afterAll, afterEach } from "vitest";
-
 import * as shouldChargeModule from "@calcom/features/bookings/lib/payment/shouldChargeNoShowCancellationFee";
-
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import CancelBooking from "../CancelBooking";
 
 // Mock the embed-iframe module to prevent it from scheduling timers/RAF that can cause
@@ -273,5 +271,54 @@ describe("CancelBooking Cancellation Fee Warning", () => {
     );
 
     expect(screen.queryByText(/I acknowledge that cancelling within/)).not.toBeInTheDocument();
+  });
+
+  it("displays the stored two-decimal no-show fee without extra scaling", () => {
+    vi.mocked(shouldChargeModule.shouldChargeNoShowCancellationFee).mockReturnValue(true);
+
+    render(
+      <CancelBooking
+        booking={mockBookingWithCancellationFee}
+        profile={{ name: "Test User", slug: "test-user" }}
+        team={null}
+        isHost={false}
+        eventTypeMetadata={mockEventTypeMetadataWithFee}
+        {...mockProps}
+      />
+    );
+
+    expect(
+      screen.getByText(
+        "I acknowledge that cancelling within 1 hours will result in a 10 usd cancellation fee being charged to my card."
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays the stored zero-decimal no-show fee without dividing by 100", () => {
+    vi.mocked(shouldChargeModule.shouldChargeNoShowCancellationFee).mockReturnValue(true);
+
+    render(
+      <CancelBooking
+        booking={{
+          ...mockBookingWithCancellationFee,
+          payment: {
+            amount: 5000,
+            currency: "jpy",
+            appId: "stripe",
+          },
+        }}
+        profile={{ name: "Test User", slug: "test-user" }}
+        team={null}
+        isHost={false}
+        eventTypeMetadata={mockEventTypeMetadataWithFee}
+        {...mockProps}
+      />
+    );
+
+    expect(
+      screen.getByText(
+        "I acknowledge that cancelling within 1 hours will result in a 5000 jpy cancellation fee being charged to my card."
+      )
+    ).toBeInTheDocument();
   });
 });
